@@ -7,8 +7,6 @@ info:
   version: 1.0.11
 servers:
 - url: http://localhost:8080/api/
-security:
-- bearerAuth: []
 tags:
 - name: Auth
   description: Everything about user authentication

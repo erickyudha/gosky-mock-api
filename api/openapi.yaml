@@ -1,0 +1,1859 @@
+openapi: 3.0.3
+info:
+  title: GoSky Backend API - OpenAPI 3.0
+  description: REST backend API for GoSky frontend web and android app.
+  contact:
+    email: apiteam@swagger.io
+  version: 1.0.11
+servers:
+- url: http://localhost:8000/api/
+security:
+- bearerAuth: []
+tags:
+- name: Auth
+  description: Everything about user authentication
+- name: Users
+  description: Operation about user data
+- name: Tickets
+  description: Operations about ticket data
+- name: Transactions
+  description: Operations about user transaction
+- name: Images
+  description: Operations about image handling
+paths:
+  /auth/register:
+    post:
+      tags:
+      - Auth
+      summary: Register new user
+      description: Register new account with USER role
+      operationId: registerMember
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/auth_register_body'
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_201'
+        "400":
+          description: "Bad Request, missing fields"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingFieldError'
+        "409":
+          description: "Conflict, email already registered"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_409'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      security:
+      - {}
+      x-swagger-router-controller: Auth
+  /auth/login:
+    post:
+      tags:
+      - Auth
+      summary: Login with account
+      description: Login and get access token for auth
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/auth_login_body'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200'
+        "400":
+          description: "Bad Request, missing fields"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingFieldError'
+        "401":
+          description: "Unauthorized, wrong login password"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_401'
+        "404":
+          description: "Conflict, email not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_404'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      security:
+      - {}
+      x-swagger-router-controller: Auth
+  /auth/whoami:
+    get:
+      tags:
+      - Auth
+      summary: Get current user data
+      description: "Return current user data based on bearer token \n\n Allowed roles:\
+        \ USER, ADMIN"
+      operationId: whoAmI
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_1'
+        "401":
+          description: "Unauthorized, bearer token invalid"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Auth
+  /users/{id}:
+    get:
+      tags:
+      - Users
+      summary: Get user data by ID
+      operationId: getUserData
+      parameters:
+      - name: id
+        in: path
+        description: ID of the user to get
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_2'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdNotFoundError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      security:
+      - {}
+      x-swagger-router-controller: Users
+  /users:
+    put:
+      tags:
+      - Users
+      summary: Edit logged in user data
+      description: "Update user data \n\n Allowed roles: ADMIN, USER"
+      operationId: editUserData
+      requestBody:
+        description: "Allowed fields to update: [name, phone, address imageId, imageUrl]"
+        content:
+          aplication/json:
+            schema:
+              $ref: '#/components/schemas/users_body'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_3'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Users
+  /auth/otp:
+    get:
+      tags:
+      - Auth
+      summary: Get OTP for email confirmation
+      description: "Return otp token, OTP is sent to corresponding email"
+      operationId: getUserDataEmail
+      parameters:
+      - name: email
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: email
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_4'
+        "400":
+          description: "Bad Request, missing fields"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingFieldError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "409":
+          description: "Conflict, email already registered"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_409'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      security:
+      - {}
+      x-swagger-router-controller: Auth
+  /users/email:
+    put:
+      tags:
+      - Users
+      summary: Update logged in user email
+      description: "Allowed roles: ADMIN, USER"
+      operationId: usersEmailPUT
+      requestBody:
+        content:
+          aplication/json:
+            schema:
+              $ref: '#/components/schemas/users_email_body'
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_5'
+        "400":
+          description: "Bad Request, missing fields"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingFieldError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "422":
+          description: "Unprocessable Entity, wrong otp or invalid token"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_422'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Users
+  /tickets:
+    get:
+      tags:
+      - Tickets
+      summary: Get ticket
+      description: Get ticket list data. Filter using query params.
+      operationId: getTicket
+      parameters:
+      - name: category
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - ONE_WAY
+          - ROUND_TRIP
+      - name: from
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: to
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+      - name: departureTime
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: timestamp
+      - name: returnTime
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: timestamp
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_6'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      security:
+      - {}
+      x-swagger-router-controller: Tickets
+    post:
+      tags:
+      - Tickets
+      summary: Add new ticket
+      description: " Allowed roles: ADMIN"
+      operationId: ticketsPOST
+      requestBody:
+        content:
+          aplication/json:
+            schema:
+              $ref: '#/components/schemas/tickets_body'
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_201_1'
+        "400":
+          description: "Bad Request, missing fields"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingFieldError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Tickets
+  /tickets/{id}:
+    get:
+      tags:
+      - Tickets
+      summary: Get ticket data by ID
+      operationId: getTicketData
+      parameters:
+      - name: id
+        in: path
+        description: ID of ticket data to get
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_7'
+        "404":
+          description: "Not Found, image Id not found"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdNotFoundError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Tickets
+    put:
+      tags:
+      - Tickets
+      summary: Update ticket data by ID
+      description: "Allowed roles: ADMIN"
+      operationId: putTicketData
+      parameters:
+      - name: id
+        in: path
+        description: ID of ticket to update
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      requestBody:
+        content:
+          aplication/json:
+            schema:
+              $ref: '#/components/schemas/tickets_id_body'
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_8'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdNotFoundError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Tickets
+    delete:
+      tags:
+      - Tickets
+      summary: Delete tickets data by ID
+      description: "Allowed roles: ADMIN"
+      operationId: deleteCarData
+      parameters:
+      - name: id
+        in: path
+        description: ID of ticket to delete
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_9'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdNotFoundError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Tickets
+  /tickets/wishlist:
+    get:
+      tags:
+      - Tickets
+      summary: Get user wishlist data
+      description: "Allowed roles: ADMIN, USER"
+      operationId: wishlist
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_10'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Tickets
+  /tickets/{id}/wishlist:
+    post:
+      tags:
+      - Tickets
+      summary: Add a ticket to wishlist
+      description: " Allowed roles: ADMIN, USER"
+      operationId: wishList
+      parameters:
+      - name: id
+        in: path
+        description: ID of ticket to add to wishlist
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_11'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdNotFoundError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Tickets
+    delete:
+      tags:
+      - Tickets
+      summary: Remove ticket from user wishlist
+      description: " Allowed roles: ADMIN, USER"
+      operationId: ticketsIdWishlistDELETE
+      parameters:
+      - name: id
+        in: path
+        description: ID of ticket to remove from wishlist
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_12'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdNotFoundError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Tickets
+  /transactions:
+    get:
+      tags:
+      - Transactions
+      summary: Get transaction list
+      description: "USER is only authorized to access transactions made by themself.\
+        \ On other hands ADMIN can access all transactions in database. \n\n Allowed\
+        \ roles: USER, ADMIN"
+      operationId: trs
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_13'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Transactions
+    post:
+      tags:
+      - Transactions
+      summary: Add new transaction
+      description: " Allowed roles: ADMIN, USER"
+      operationId: addtrans
+      requestBody:
+        content:
+          aplication/json:
+            schema:
+              $ref: '#/components/schemas/transactions_body'
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_201_2'
+        "400":
+          description: "Bad Request, missing fields"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingFieldError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdNotFoundError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Transactions
+  /transactions/{id}:
+    get:
+      tags:
+      - Transactions
+      summary: Get transaction by ID
+      description: USER is only authorized to access transactions made by themself.
+        On other hands ADMIN can access all transactions in database
+      operationId: getTransactionsData
+      parameters:
+      - name: id
+        in: path
+        description: ID of the transaction to get
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_14'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdNotFoundError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Transactions
+  /images:
+    post:
+      tags:
+      - Images
+      summary: Upload image to server
+      description: |-
+        USER is only authorized to access PROFILE_IMG type, ADMIN can access both.
+
+         Allowed roles: ADMIN, USER
+      operationId: addImg
+      parameters:
+      - name: type
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          enum:
+          - PROFILE_IMG
+          - TICKET_IMG
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/images_body'
+        required: true
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_201_3'
+        "400":
+          description: "Bad Request, missing fields"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingFieldError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Images
+    delete:
+      tags:
+      - Images
+      summary: Delete image data by ID
+      description: |-
+        USER is only authorized to access PROFILE_IMG type, ADMIN can access both.
+
+         Allowed roles: ADMIN, USER
+      operationId: deleteImage
+      parameters:
+      - name: imageId
+        in: query
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/inline_response_200_15'
+        "400":
+          description: "Bad Request, missing fields"
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MissingFieldError'
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedError'
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdNotFoundError'
+        default:
+          description: General Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneralError'
+      x-swagger-router-controller: Images
+components:
+  schemas:
+    GeneralError:
+      type: object
+      properties:
+        status:
+          type: string
+          example: error
+        message:
+          type: string
+          example: error message
+    MissingFieldError:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: missing required field(s)
+    UnauthorizedError:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: unauthorized
+    IdNotFoundError:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: id not found
+    UserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: user
+        email:
+          type: string
+          example: user@email.com
+        encryptedPassword:
+          type: string
+          example: string
+        role:
+          type: string
+          enum:
+          - USER
+          - ADMIN
+        phone:
+          type: string
+          example: 0856xxxxxxxx
+        address:
+          type: string
+          example: string
+        imageId:
+          type: string
+          example: string
+        imageUrl:
+          type: string
+          example: string.com/image.png
+        createdAt:
+          type: string
+          example: timestamp
+        updatedAt:
+          type: string
+          example: timestamp
+        deletedAt:
+          type: string
+          example: timestamp
+      example:
+        createdAt: timestamp
+        deletedAt: timestamp
+        role: USER
+        address: string
+        imageId: string
+        phone: 0856xxxxxxxx
+        imageUrl: string.com/image.png
+        name: user
+        id: 1
+        email: user@email.com
+        encryptedPassword: string
+        updatedAt: timestamp
+    TicketResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        category:
+          type: string
+          enum:
+          - ONE_WAY
+          - ROUND_TRIP
+        from:
+          type: string
+          example: JAKARTA
+        to:
+          type: string
+          example: MEDAN
+        departureTime:
+          type: string
+          example: timestamp
+        returnTime:
+          type: string
+          example: timestamp
+        price:
+          type: integer
+          example: 980000
+        flightNumber:
+          type: string
+          example: string
+        imageId:
+          type: string
+          example: string
+        imageUrl:
+          type: string
+          example: string.com/image.png
+        description:
+          type: string
+          example: string
+        wishlisted:
+          type: boolean
+          example: false
+        createdBy:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          example: timestamp
+        updatedBy:
+          type: integer
+          example: 1
+        updatedAt:
+          type: string
+          example: timestamp
+        deletedAt:
+          type: string
+          example: timestamp
+      example:
+        departureTime: timestamp
+        imageId: string
+        updatedBy: 1
+        description: string
+        wishlisted: false
+        returnTime: timestamp
+        flightNumber: string
+        createdAt: timestamp
+        deletedAt: timestamp
+        createdBy: 1
+        price: 980000
+        imageUrl: string.com/image.png
+        from: JAKARTA
+        id: 1
+        to: MEDAN
+        category: ONE_WAY
+        updatedAt: timestamp
+    TransactionResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        ticketId:
+          type: integer
+          example: 1
+        amount:
+          type: integer
+          example: 1
+        createdAt:
+          type: string
+          example: timestamp
+        updatedAt:
+          type: string
+          example: timestamp
+        deletedAt:
+          type: string
+          example: timestamp
+      example:
+        createdAt: timestamp
+        amount: 1
+        deletedAt: timestamp
+        id: 1
+        userId: 1
+        ticketId: 1
+        updatedAt: timestamp
+    SimpleUserResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: user
+        role:
+          type: string
+          enum:
+          - USER
+          - ADMIN
+        imageUrl:
+          type: string
+          example: string.com/image1.png
+      example:
+        role: USER
+        imageUrl: string.com/image1.png
+        name: user
+        id: 1
+    ImageResponse:
+      type: object
+      properties:
+        imageId:
+          type: string
+          example: image1
+        imageUrl:
+          type: string
+          example: string.com/image1.png
+      example:
+        imageId: image1
+        imageUrl: string.com/image1.png
+    auth_register_body:
+      required:
+      - name
+      - otp
+      - otpToken
+      - password
+      type: object
+      properties:
+        name:
+          type: string
+          example: John Doe
+        password:
+          type: string
+          example: this_password
+        otp:
+          type: string
+          example: string
+        otpToken:
+          type: string
+          example: string
+    inline_response_201:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: register success
+        data:
+          $ref: '#/components/schemas/inline_response_201_data'
+      example:
+        data:
+          accessToken: string
+        message: register success
+        status: success
+    inline_response_409:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: email already registered
+    auth_login_body:
+      required:
+      - email
+      - password
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: new@account.com
+        password:
+          type: string
+          example: this_password
+    inline_response_200:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: login success
+        data:
+          $ref: '#/components/schemas/inline_response_201_data'
+      example:
+        data:
+          accessToken: string
+        message: login success
+        status: success
+    inline_response_401:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: wrong password
+    inline_response_404:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: email not found
+    inline_response_200_1:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: get user data success
+        data:
+          $ref: '#/components/schemas/UserResponse'
+      example:
+        data:
+          createdAt: timestamp
+          deletedAt: timestamp
+          role: USER
+          address: string
+          imageId: string
+          phone: 0856xxxxxxxx
+          imageUrl: string.com/image.png
+          name: user
+          id: 1
+          email: user@email.com
+          encryptedPassword: string
+          updatedAt: timestamp
+        message: get user data success
+        status: success
+    inline_response_200_2:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: get user data success
+        data:
+          $ref: '#/components/schemas/SimpleUserResponse'
+      example:
+        data:
+          role: USER
+          imageUrl: string.com/image1.png
+          name: user
+          id: 1
+        message: get user data success
+        status: success
+    users_body:
+      type: object
+      properties:
+        name:
+          type: string
+          example: John Doe
+        phone:
+          type: string
+          format: email
+          example: 0856xxxxxxxx
+        address:
+          type: string
+          example: string
+        imageId:
+          type: string
+          example: string
+        imageUrl:
+          type: string
+          example: string.com/image.png
+    inline_response_200_3:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: update user data success
+        data:
+          $ref: '#/components/schemas/inline_response_200_3_data'
+      example:
+        data:
+          userData:
+            createdAt: timestamp
+            deletedAt: timestamp
+            role: USER
+            address: string
+            imageId: string
+            phone: 0856xxxxxxxx
+            imageUrl: string.com/image.png
+            name: user
+            id: 1
+            email: user@email.com
+            encryptedPassword: string
+            updatedAt: timestamp
+          accessToken: string
+        message: update user data success
+        status: success
+    inline_response_200_4:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: otp request success
+        data:
+          $ref: '#/components/schemas/inline_response_200_4_data'
+      example:
+        data:
+          otpToken: string
+        message: otp request success
+        status: success
+    users_email_body:
+      required:
+      - otp
+      - otpToken
+      type: object
+      properties:
+        otp:
+          type: string
+          example: "123456"
+        otpToken:
+          type: string
+          example: string
+    inline_response_200_5:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: update user email success
+        data:
+          $ref: '#/components/schemas/inline_response_200_3_data'
+      example:
+        data:
+          userData:
+            createdAt: timestamp
+            deletedAt: timestamp
+            role: USER
+            address: string
+            imageId: string
+            phone: 0856xxxxxxxx
+            imageUrl: string.com/image.png
+            name: user
+            id: 1
+            email: user@email.com
+            encryptedPassword: string
+            updatedAt: timestamp
+          accessToken: string
+        message: update user email success
+        status: success
+    inline_response_422:
+      type: object
+      properties:
+        status:
+          type: string
+          example: failed
+        message:
+          type: string
+          example: wrong otp or invalid otpToken
+    inline_response_200_6:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: get ticket list data success
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketResponse'
+        meta:
+          $ref: '#/components/schemas/inline_response_200_6_meta'
+      example:
+        data:
+        - departureTime: timestamp
+          imageId: string
+          updatedBy: 1
+          description: string
+          wishlisted: false
+          returnTime: timestamp
+          flightNumber: string
+          createdAt: timestamp
+          deletedAt: timestamp
+          createdBy: 1
+          price: 980000
+          imageUrl: string.com/image.png
+          from: JAKARTA
+          id: 1
+          to: MEDAN
+          category: ONE_WAY
+          updatedAt: timestamp
+        - departureTime: timestamp
+          imageId: string
+          updatedBy: 1
+          description: string
+          wishlisted: false
+          returnTime: timestamp
+          flightNumber: string
+          createdAt: timestamp
+          deletedAt: timestamp
+          createdBy: 1
+          price: 980000
+          imageUrl: string.com/image.png
+          from: JAKARTA
+          id: 1
+          to: MEDAN
+          category: ONE_WAY
+          updatedAt: timestamp
+        meta:
+          count: 1
+        message: get ticket list data success
+        status: success
+    tickets_body:
+      required:
+      - category
+      - departureTime
+      - flightNumber
+      - from
+      - price
+      - to
+      type: object
+      properties:
+        category:
+          type: string
+          enum:
+          - ONE_WAY
+          - ROUND_TRIP
+        from:
+          type: string
+          example: JAKARTA
+        to:
+          type: string
+          example: MEDAN
+        departureTime:
+          type: string
+          example: timestamp
+        returnTime:
+          type: string
+          example: timestamp
+        price:
+          type: number
+          example: 980000
+        flightNumber:
+          type: string
+          example: string
+        imageId:
+          type: string
+          example: string
+        imageUrl:
+          type: string
+          example: string.com/image.png
+        description:
+          type: string
+          example: string
+    inline_response_201_1:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: add ticket data success
+        data:
+          $ref: '#/components/schemas/TicketResponse'
+      example:
+        data:
+          departureTime: timestamp
+          imageId: string
+          updatedBy: 1
+          description: string
+          wishlisted: false
+          returnTime: timestamp
+          flightNumber: string
+          createdAt: timestamp
+          deletedAt: timestamp
+          createdBy: 1
+          price: 980000
+          imageUrl: string.com/image.png
+          from: JAKARTA
+          id: 1
+          to: MEDAN
+          category: ONE_WAY
+          updatedAt: timestamp
+        message: add ticket data success
+        status: success
+    inline_response_200_7:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: get ticket data success
+        data:
+          $ref: '#/components/schemas/TicketResponse'
+      example:
+        data:
+          departureTime: timestamp
+          imageId: string
+          updatedBy: 1
+          description: string
+          wishlisted: false
+          returnTime: timestamp
+          flightNumber: string
+          createdAt: timestamp
+          deletedAt: timestamp
+          createdBy: 1
+          price: 980000
+          imageUrl: string.com/image.png
+          from: JAKARTA
+          id: 1
+          to: MEDAN
+          category: ONE_WAY
+          updatedAt: timestamp
+        message: get ticket data success
+        status: success
+    tickets_id_body:
+      type: object
+      properties:
+        category:
+          type: string
+          enum:
+          - ONE_WAY
+          - ROUND_TRIP
+        from:
+          type: string
+          example: JAKARTA
+        to:
+          type: string
+          example: MEDAN
+        depatureTime:
+          type: string
+          example: timestamp
+        returnTime:
+          type: string
+          example: timestamp
+        price:
+          type: number
+          example: 980000
+        flightNumber:
+          type: string
+          example: string
+        imageId:
+          type: string
+          example: string
+        imageUrl:
+          type: string
+          example: string.com/image.png
+        description:
+          type: string
+          example: string
+    inline_response_200_8:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: update ticket data success
+        data:
+          $ref: '#/components/schemas/TicketResponse'
+      example:
+        data:
+          departureTime: timestamp
+          imageId: string
+          updatedBy: 1
+          description: string
+          wishlisted: false
+          returnTime: timestamp
+          flightNumber: string
+          createdAt: timestamp
+          deletedAt: timestamp
+          createdBy: 1
+          price: 980000
+          imageUrl: string.com/image.png
+          from: JAKARTA
+          id: 1
+          to: MEDAN
+          category: ONE_WAY
+          updatedAt: timestamp
+        message: update ticket data success
+        status: success
+    inline_response_200_9:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: delete ticket data success
+      example:
+        message: delete ticket data success
+        status: success
+    inline_response_200_10:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: get ticket wishlist data success
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketResponse'
+        meta:
+          $ref: '#/components/schemas/inline_response_200_6_meta'
+      example:
+        data:
+        - departureTime: timestamp
+          imageId: string
+          updatedBy: 1
+          description: string
+          wishlisted: false
+          returnTime: timestamp
+          flightNumber: string
+          createdAt: timestamp
+          deletedAt: timestamp
+          createdBy: 1
+          price: 980000
+          imageUrl: string.com/image.png
+          from: JAKARTA
+          id: 1
+          to: MEDAN
+          category: ONE_WAY
+          updatedAt: timestamp
+        - departureTime: timestamp
+          imageId: string
+          updatedBy: 1
+          description: string
+          wishlisted: false
+          returnTime: timestamp
+          flightNumber: string
+          createdAt: timestamp
+          deletedAt: timestamp
+          createdBy: 1
+          price: 980000
+          imageUrl: string.com/image.png
+          from: JAKARTA
+          id: 1
+          to: MEDAN
+          category: ONE_WAY
+          updatedAt: timestamp
+        meta:
+          count: 1
+        message: get ticket wishlist data success
+        status: success
+    inline_response_200_11:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: wishlist ticket success
+      example:
+        message: wishlist ticket success
+        status: success
+    inline_response_200_12:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: unwish ticket success
+      example:
+        message: unwish ticket success
+        status: success
+    inline_response_200_13:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: get transaction list data success
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketResponse'
+        meta:
+          $ref: '#/components/schemas/inline_response_200_6_meta'
+      example:
+        data:
+        - departureTime: timestamp
+          imageId: string
+          updatedBy: 1
+          description: string
+          wishlisted: false
+          returnTime: timestamp
+          flightNumber: string
+          createdAt: timestamp
+          deletedAt: timestamp
+          createdBy: 1
+          price: 980000
+          imageUrl: string.com/image.png
+          from: JAKARTA
+          id: 1
+          to: MEDAN
+          category: ONE_WAY
+          updatedAt: timestamp
+        - departureTime: timestamp
+          imageId: string
+          updatedBy: 1
+          description: string
+          wishlisted: false
+          returnTime: timestamp
+          flightNumber: string
+          createdAt: timestamp
+          deletedAt: timestamp
+          createdBy: 1
+          price: 980000
+          imageUrl: string.com/image.png
+          from: JAKARTA
+          id: 1
+          to: MEDAN
+          category: ONE_WAY
+          updatedAt: timestamp
+        meta:
+          count: 1
+        message: get transaction list data success
+        status: success
+    transactions_body:
+      required:
+      - amount
+      - ticketId
+      type: object
+      properties:
+        ticketId:
+          type: integer
+          example: 1
+        amount:
+          type: integer
+          example: 1
+    inline_response_201_2:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: add transaction success
+        data:
+          $ref: '#/components/schemas/TransactionResponse'
+      example:
+        data:
+          createdAt: timestamp
+          amount: 1
+          deletedAt: timestamp
+          id: 1
+          userId: 1
+          ticketId: 1
+          updatedAt: timestamp
+        message: add transaction success
+        status: success
+    inline_response_200_14:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: get transaction data success
+        data:
+          $ref: '#/components/schemas/TransactionResponse'
+      example:
+        data:
+          createdAt: timestamp
+          amount: 1
+          deletedAt: timestamp
+          id: 1
+          userId: 1
+          ticketId: 1
+          updatedAt: timestamp
+        message: get transaction data success
+        status: success
+    images_body:
+      required:
+      - image
+      type: object
+      properties:
+        image:
+          type: string
+          format: binary
+    inline_response_201_3:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: upload image success
+        data:
+          $ref: '#/components/schemas/ImageResponse'
+      example:
+        data:
+          imageId: image1
+          imageUrl: string.com/image1.png
+        message: upload image success
+        status: success
+    inline_response_200_15:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        message:
+          type: string
+          example: delete image success
+      example:
+        message: delete image success
+        status: success
+    inline_response_201_data:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: string
+      example:
+        accessToken: string
+    inline_response_200_3_data:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: string
+        userData:
+          $ref: '#/components/schemas/UserResponse'
+      example:
+        userData:
+          createdAt: timestamp
+          deletedAt: timestamp
+          role: USER
+          address: string
+          imageId: string
+          phone: 0856xxxxxxxx
+          imageUrl: string.com/image.png
+          name: user
+          id: 1
+          email: user@email.com
+          encryptedPassword: string
+          updatedAt: timestamp
+        accessToken: string
+    inline_response_200_4_data:
+      type: object
+      properties:
+        otpToken:
+          type: string
+          example: string
+      example:
+        otpToken: string
+    inline_response_200_6_meta:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 1
+      example:
+        count: 1
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
